@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Colors } from "/src/components/Color";
-import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "/src/context/AuthContext";
+import { useNavigate, useLocation, NavLink, Outlet } from "react-router-dom";
 import {
-  LayoutDashboard,
-  FileText,
+  BookOpen,
   BarChart3,
-  ClipboardList,
-  CalendarClock,
+  User,
   Bell,
-  Settings,
   LogOut,
   Menu,
   X,
@@ -17,34 +15,42 @@ import {
   Search,
 } from "lucide-react";
 
+// Each item has a real URL, so refresh and the back button work.
 const NAV_ITEMS = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { key: "exams", label: "My exams", icon: FileText, badge: 2 },
-  { key: "practice", label: "Practice tests", icon: ClipboardList },
-  { key: "results", label: "Results", icon: BarChart3 },
-  { key: "timetable", label: "Timetable", icon: CalendarClock },
-  { key: "notices", label: "Announcements", icon: Bell, badge: 5 },
+  { to: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
+  { to: "/dashboard/results", label: "My Results", icon: BarChart3 },
+  { to: "/dashboard/profile", label: "Profile", icon: User },
 ];
 
 function initials(name) {
+  if (!name) return "?";
   return name
-    .split(" ")
+    .trim()
+    .split(/\s+/)
     .map((p) => p[0])
     .join("")
     .slice(0, 2)
     .toUpperCase();
 }
 
-export function CBTSidebar({
-  studentName = "Amaka Chukwu",
-  studentId = "CAND-0341829",
-  children,
-}) {
-  const [active, setActive] = useState("dashboard");
+export function CBTSidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user, logout } = useAuth();
+
+  // Real student details from the session.
+  // Adjust these field names to match what your server returns.
+  const studentName = user?.fullname || user?.username || "Student";
+  const studentId = user?.studentId || user?.username || "";
+
+  // Page title in the desktop navbar comes from the current URL
+  const currentTitle =
+    NAV_ITEMS.find((n) =>
+      n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)
+    )?.label ?? "Subjects";
 
   // Close the mobile drawer whenever the viewport grows back to desktop width
   useEffect(() => {
@@ -55,12 +61,17 @@ export function CBTSidebar({
     return () => window.removeEventListener("resize", onResize);
   }, []);
 
+  const handleLogout = () => {
+    logout();
+    navigate("/login", { replace: true });
+  };
+
   const gradientStyle = {
     backgroundImage: `linear-gradient(165deg, ${Colors.darker} 0%, ${Colors.secondary} 30%, ${Colors.accent} 55%, ${Colors.dark} 78%, ${Colors.darker} 100%)`,
   };
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 flex">
+    <div className="min-h-screen w-full flex" style={{ background: Colors.background }}>
       {/* ---------------- Mobile top bar ---------------- */}
       <header
         className="lg:hidden fixed top-0 inset-x-0 z-30 flex items-center justify-between h-14 px-4 text-white"
@@ -140,86 +151,84 @@ export function CBTSidebar({
         >
           <div
             className={[
-              "rounded-full bg-white text-[#26494c] font-semibold flex items-center justify-center shrink-0",
+              "rounded-full bg-white font-semibold flex items-center justify-center shrink-0",
               collapsed ? "w-10 h-10 text-[13px]" : "w-16 h-16 text-lg",
               "transition-all duration-300",
             ].join(" ")}
+            style={{ color: Colors.dark }}
           >
             {initials(studentName)}
           </div>
           {!collapsed && (
-            <div className="mt-3 min-w-0">
+            <div className="mt-3 min-w-0 max-w-full">
               <p className="font-medium text-sm leading-tight truncate">
                 {studentName}
               </p>
-              <p className="text-[12px] text-white/60 mt-0.5 tracking-wide">
-                {studentId}
-              </p>
+              {studentId && (
+                <p className="text-[12px] text-white/60 mt-0.5 tracking-wide truncate">
+                  {studentId}
+                </p>
+              )}
             </div>
           )}
         </div>
 
         {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 space-y-1">
-          {NAV_ITEMS.map(({ key, label, icon: Icon, badge }) => {
-            const isActive = active === key;
-            return (
-              <button
-                key={key}
-                onClick={() => {
-                  setActive(key);
-                  setMobileOpen(false);
-                }}
-                title={collapsed ? label : undefined}
-                className={[
+          {NAV_ITEMS.map(({ to, label, icon: Icon, badge, end }) => (
+            <NavLink
+              key={to}
+              to={to}
+              end={end}
+              onClick={() => setMobileOpen(false)}
+              title={collapsed ? label : undefined}
+              className={({ isActive }) =>
+                [
                   "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] transition-colors relative",
                   collapsed ? "justify-center px-0" : "",
                   isActive
-                    ? "bg-white text-[#26494c] font-semibold"
+                    ? "bg-white font-semibold"
                     : "text-white/80 hover:bg-white/10 hover:text-white",
-                ].join(" ")}
-              >
-                <Icon size={18} className="shrink-0" />
-                {!collapsed && <span className="truncate">{label}</span>}
-                {badge && !collapsed && (
-                  <span
-                    className={[
-                      "ml-auto text-[10.5px] font-semibold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center",
-                      isActive
-                        ? "bg-[#26494c] text-white"
-                        : "bg-white/20 text-white",
-                    ].join(" ")}
-                  >
-                    {badge}
-                  </span>
-                )}
-                {badge && collapsed && (
-                  <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-amber-300" />
-                )}
-              </button>
-            );
-          })}
+                ].join(" ")
+              }
+              style={({ isActive }) => (isActive ? { color: Colors.dark } : undefined)}
+            >
+              {({ isActive }) => (
+                <>
+                  <Icon size={18} className="shrink-0" />
+                  {!collapsed && <span className="truncate">{label}</span>}
+                  {badge && !collapsed && (
+                    <span
+                      className={[
+                        "ml-auto text-[10.5px] font-semibold rounded-full min-w-[18px] h-[18px] px-1 flex items-center justify-center",
+                        isActive
+                          ? "text-white"
+                          : "bg-white/20 text-white",
+                      ].join(" ")}
+                      style={isActive ? { background: Colors.dark } : undefined}
+                    >
+                      {badge}
+                    </span>
+                  )}
+                  {badge && collapsed && (
+                    <span className="absolute top-1.5 right-2 w-2 h-2 rounded-full bg-amber-300" />
+                  )}
+                </>
+              )}
+            </NavLink>
+          ))}
         </nav>
 
-        {/* Footer: settings + logout */}
+        {/* Footer: logout */}
         <div className="px-3 pb-4 pt-2 space-y-1 shrink-0">
           <button
-            title={collapsed ? "Settings" : undefined}
-            className={[
-              "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] text-white/80 hover:bg-white/10 hover:text-white transition-colors",
-              collapsed ? "justify-center px-0" : "",
-            ].join(" ")}
-          >
-            <Settings size={18} className="shrink-0" />
-            {!collapsed && <span>Settings</span>}
-          </button>
-          <button
-            onClick={() => navigate("/login")}
+            onClick={handleLogout}
             title={collapsed ? "Logout" : undefined}
             className={[
-              "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium bg-white text-[#26494c] hover:bg-white/90 transition-colors",
+              "w-full flex items-center gap-3 rounded-xl px-3 py-2.5 text-[13.5px] font-medium bg-white hover:bg-white/90 transition-colors",
               collapsed ? "justify-center px-0" : "",
             ].join(" ")}
+            style={{ color: Colors.dark }}
           >
             <LogOut size={18} className="shrink-0" />
             {!collapsed && <span>Logout</span>}
@@ -227,19 +236,12 @@ export function CBTSidebar({
         </div>
       </aside>
 
-      {/*
-        ---------------- Right column (navbar + content) ----------------
-        This sits next to <aside> inside the same flex row as a flex-1
-        child, so it automatically takes up whatever width is left over
-        when the sidebar is 264px vs 84px — no manual margin math needed,
-        and it resizes smoothly because the sidebar's width transition
-        drives it.
-      */}
+      {/* ---------------- Right column (navbar + routed content) ---------------- */}
       <div className="flex-1 min-w-0 flex flex-col pt-14 lg:pt-0">
         {/* ---------------- Desktop navbar ---------------- */}
         <header className="hidden lg:flex sticky top-0 z-10 h-16 items-center gap-4 px-6 bg-white border-b border-slate-200">
           <h1 className="font-semibold text-slate-800 text-[15px] truncate">
-            {NAV_ITEMS.find((n) => n.key === active)?.label ?? "Dashboard"}
+            {currentTitle}
           </h1>
 
           <div className="ml-auto flex items-center gap-2">
@@ -264,34 +266,9 @@ export function CBTSidebar({
           </div>
         </header>
 
-        {/* ---------------- Main content placeholder ---------------- */}
+        {/* The matching child route renders here */}
         <main className="flex-1 min-w-0">
-          {children ?? (
-            <div className="p-6 lg:p-10">
-              <h1 className="text-xl font-semibold text-slate-800 lg:hidden">
-                Dashboard
-              </h1>
-              <p className="text-sm text-slate-500 mt-1 lg:mt-0">
-                Content area — swap this with your exam dashboard, results
-                tables, etc.
-              </p>
-              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {["Available exams", "Completed", "Upcoming"].map((t) => (
-                  <div
-                    key={t}
-                    className="rounded-2xl border border-slate-200 bg-white p-5"
-                  >
-                    <p className="text-xs font-medium text-slate-400 uppercase tracking-wide">
-                      {t}
-                    </p>
-                    <p className="text-2xl font-semibold text-slate-800 mt-2">
-                      —
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
+          <Outlet />
         </main>
       </div>
     </div>
