@@ -40,6 +40,11 @@ export function AuthProvider({ children }) {
 
         try {
             localStorage.removeItem(STORAGE_KEY);
+
+            // Also remove any saved, unfinished exam answers on this device
+            Object.keys(localStorage)
+                .filter((key) => key.startsWith("cbt_attempt_"))
+                .forEach((key) => localStorage.removeItem(key));
         } catch {
             // Ignore storage errors on logout.
         }

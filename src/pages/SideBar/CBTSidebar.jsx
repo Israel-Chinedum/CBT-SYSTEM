@@ -3,6 +3,7 @@ import { Colors } from "/src/components/Color";
 import { useAuth } from "/src/context/AuthContext";
 import { useNavigate, useLocation, NavLink, Outlet } from "react-router-dom";
 import {
+  LayoutDashboard,
   BookOpen,
   BarChart3,
   User,
@@ -17,6 +18,7 @@ import {
 
 // Each item has a real URL, so refresh and the back button work.
 const NAV_ITEMS = [
+  { to: "/dashboard", label: "Dashboard", icon: LayoutDashboard, end: true },
   { to: "/dashboard/subjects", label: "Subjects", icon: BookOpen },
   { to: "/dashboard/results", label: "My Results", icon: BarChart3 },
   { to: "/dashboard/profile", label: "Profile", icon: User },
@@ -50,7 +52,7 @@ export function CBTSidebar() {
   const currentTitle =
     NAV_ITEMS.find((n) =>
       n.end ? location.pathname === n.to : location.pathname.startsWith(n.to)
-    )?.label ?? "Subjects";
+    )?.label ?? "Dashboard";
 
   // Close the mobile drawer whenever the viewport grows back to desktop width
   useEffect(() => {

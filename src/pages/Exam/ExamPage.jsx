@@ -13,7 +13,10 @@ import {
 import { Colors } from "/src/components/Color";
 import { Modal } from "/src/components/Modal";
 import { useAuth } from "/src/context/AuthContext";
-import { getExam, submitExam } from "/src/services/mockApi";
+import { getExam, submitExam } from "/src/services/api";
+import { useSlowNotice } from "/src/utils/useSlowNotice";
+import { Calculator } from "/src/components/Calculator";
+import { ResultSlip } from "/src/components/ResultSlip";
 import {
     getAttempt,
     saveAttempt,
@@ -22,6 +25,9 @@ import {
 } from "/src/utils/attemptStorage";
 
 const LETTERS = ["A", "B", "C", "D", "E"];
+
+// Subjects that get the calculator button during the exam
+const CALCULATOR_SUBJECTS = ["mathematics"];
 
 const pad = (n) => String(n).padStart(2, "0");
 
@@ -135,11 +141,17 @@ export function ExamPage() {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [result, setResult] = useState(null);
     const [submitError, setSubmitError] = useState("");
+    const [switches, setSwitches] = useState(0);      // times the student left the exam tab
+    const [warnOpen, setWarnOpen] = useState(false);
+    const [slipOpen, setSlipOpen] = useState(false);
+    const slow = useSlowNotice(status === "loading");
 
     const submittingRef = useRef(false);
     const autoSubmitTried = useRef(false);
     const latestAnswers = useRef({});
     latestAnswers.current = answers;
+    const latestQuestions = useRef([]);
+    latestQuestions.current = exam?.questions ?? [];
 
     const gradientStyle = { background: Colors.gradient };
 
@@ -161,6 +173,7 @@ export function ExamPage() {
                     deadline = saved.endsAt;
                     setAnswers(saved.answers || {});
                     setFlagged(saved.flagged || {});
+                    setSwitches(saved.switches || 0);
                     setCurrent(Math.min(saved.current || 0, data.questions.length - 1));
                 } else {
                     deadline = Date.now() + data.subject.durationMinutes * 60 * 1000;
@@ -168,7 +181,8 @@ export function ExamPage() {
                         endsAt: deadline,
                         answers: {},
                         flagged: {},
-                        current: 0
+                        current: 0,
+                        switches: 0
                     });
                 }
 
@@ -192,8 +206,8 @@ export function ExamPage() {
 
     useEffect(() => {
         if (status !== "active") return;
-        saveAttempt(userKey, subjectId, { endsAt, answers, flagged, current });
-    }, [status, endsAt, answers, flagged, current, userKey, subjectId]);
+        saveAttempt(userKey, subjectId, { endsAt, answers, flagged, current, switches });
+    }, [status, endsAt, answers, flagged, current, switches, userKey, subjectId]);
 
 
     // ---------- Submit ----------
@@ -209,7 +223,7 @@ export function ExamPage() {
         setStatus("submitting");
 
         try {
-            const res = await submitExam(subjectId, latestAnswers.current);
+            const res = await submitExam(subjectId, latestAnswers.current, latestQuestions.current);
             clearAttempt(userKey, subjectId);
             setResult(res);
             setStatus("done");
@@ -257,13 +271,43 @@ export function ExamPage() {
     }, [status]);
 
 
+    // ---------- Record and warn when the student leaves the exam tab ----------
+
+    useEffect(() => {
+        if (status !== "active") return;
+
+        const onVisibilityChange = () => {
+            if (document.hidden) {
+                setSwitches((n) => n + 1);
+            } else {
+                setWarnOpen(true);
+            }
+        };
+
+        document.addEventListener("visibilitychange", onVisibilityChange);
+        return () =>
+            document.removeEventListener("visibilitychange", onVisibilityChange);
+    }, [status]);
+
+
     // ---------- Screens other than the exam itself ----------
 
     if (status === "loading") {
         return (
-            <div className="min-h-screen flex items-center justify-center text-slate-500" style={{ background: Colors.background }}>
-                <Loader2 className="animate-spin mr-2" size={20} />
-                Loading exam…
+            <div
+                className="min-h-screen flex flex-col items-center justify-center px-4 text-center text-slate-500"
+                style={{ background: Colors.background }}
+            >
+                <div className="flex items-center">
+                    <Loader2 className="animate-spin mr-2" size={20} />
+                    Loading exam…
+                </div>
+
+                {slow && (
+                    <p className="mt-3 text-sm">
+                        The server is waking up. This can take up to a minute, please wait...
+                    </p>
+                )}
             </div>
         );
     }
@@ -327,6 +371,12 @@ export function ExamPage() {
                             View my results
                         </button>
                         <button
+                            onClick={() => setSlipOpen(true)}
+                            className="h-11 px-5 rounded-xl border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                        >
+                            Print result slip
+                        </button>
+                        <button
                             onClick={() => navigate("/dashboard/subjects", { replace: true })}
                             className="h-11 px-5 rounded-xl border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50"
                         >
@@ -335,6 +385,15 @@ export function ExamPage() {
                     </div>
 
                 </div>
+
+                {slipOpen && (
+                    <ResultSlip
+                        result={result}
+                        passMark={exam.subject.passMark}
+                        onClose={() => setSlipOpen(false)}
+                    />
+                )}
+
             </div>
         );
     }
@@ -399,6 +458,15 @@ export function ExamPage() {
                     </div>
 
                     <div className="flex items-center gap-2">
+
+                        {switches > 0 && (
+                            <div
+                                className="hidden sm:flex items-center h-10 px-3 rounded-xl bg-amber-400 text-xs font-semibold text-slate-900"
+                                title="Times you left the exam screen"
+                            >
+                                Left screen: {switches}
+                            </div>
+                        )}
 
                         <div
                             role="timer"
@@ -465,7 +533,16 @@ export function ExamPage() {
                             </button>
                         </div>
 
-                        <h1 className="mt-4 text-lg sm:text-xl text-slate-800 leading-snug">
+                        {question.topic && (
+                            <p
+                                className="mt-4 inline-block px-2.5 py-0.5 rounded-full text-xs font-medium"
+                                style={{ background: Colors.background, color: Colors.dark }}
+                            >
+                                {question.topic}
+                            </p>
+                        )}
+
+                        <h1 className="mt-3 text-lg sm:text-xl text-slate-800 leading-snug">
                             {question.text}
                         </h1>
 
@@ -638,6 +715,36 @@ export function ExamPage() {
 
                     <p className="mt-3">
                         Once submitted, you cannot change your answers.
+                    </p>
+                </Modal>
+            )}
+
+
+            {/* ---------------- Calculator ---------------- */}
+            {CALCULATOR_SUBJECTS.includes(exam.subject.id) && !busy && <Calculator />}
+
+
+            {/* ---------------- Left-the-screen warning ---------------- */}
+            {warnOpen && (
+                <Modal
+                    title="You left the exam screen"
+                    onClose={() => setWarnOpen(false)}
+                    actions={
+                        <button
+                            onClick={() => setWarnOpen(false)}
+                            className="h-10 px-4 rounded-xl text-sm font-medium text-white hover:opacity-90"
+                            style={gradientStyle}
+                        >
+                            Return to exam
+                        </button>
+                    }
+                >
+                    <p>
+                        Leaving the exam screen is recorded. You have left it{" "}
+                        <strong>{switches}</strong> {switches === 1 ? "time" : "times"} so far.
+                    </p>
+                    <p className="mt-2">
+                        Please stay on this screen until you submit. Your timer is still running.
                     </p>
                 </Modal>
             )}

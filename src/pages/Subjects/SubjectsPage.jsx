@@ -4,7 +4,7 @@ import { Calculator, BookOpen, Atom, FlaskConical, Clock, ListChecks } from "luc
 import { Colors } from "/src/components/Color";
 import { Modal } from "/src/components/Modal";
 import { useAuth } from "/src/context/AuthContext";
-import { getSubjects } from "/src/services/mockApi";
+import { getSubjects } from "/src/services/api";
 import { getAttempt, userKeyFrom } from "/src/utils/attemptStorage";
 
 // The server sends an icon NAME; we map it to a real icon here

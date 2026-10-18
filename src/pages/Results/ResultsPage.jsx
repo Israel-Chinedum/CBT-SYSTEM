@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Colors } from "/src/components/Color";
-import { getResults } from "/src/services/mockApi";
+import { ResultSlip } from "/src/components/ResultSlip";
+import { getResults } from "/src/services/api";
 
 const formatDate = (iso) =>
     new Date(iso).toLocaleDateString("en-GB", {
@@ -31,6 +32,7 @@ export function ResultsPage() {
     const [results, setResults] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [slip, setSlip] = useState(null);     // the result being printed
 
 
     const load = useCallback(async () => {
@@ -137,6 +139,7 @@ export function ResultsPage() {
                                 <th className="px-5 py-3 font-medium">Percentage</th>
                                 <th className="px-5 py-3 font-medium">Date</th>
                                 <th className="px-5 py-3 font-medium">Status</th>
+                                <th className="px-5 py-3 font-medium">Slip</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -156,6 +159,15 @@ export function ResultsPage() {
                                     </td>
                                     <td className="px-5 py-3.5">
                                         <StatusBadge passed={r.passed} />
+                                    </td>
+                                    <td className="px-5 py-3.5">
+                                        <button
+                                            onClick={() => setSlip(r)}
+                                            className="text-sm font-medium underline"
+                                            style={{ color: Colors.dark }}
+                                        >
+                                            Print
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
@@ -185,9 +197,21 @@ export function ResultsPage() {
                             <p className="text-xs text-slate-400 mt-1">
                                 {formatDate(r.date)}
                             </p>
+                            <button
+                                onClick={() => setSlip(r)}
+                                className="mt-3 text-sm font-medium underline"
+                                style={{ color: Colors.dark }}
+                            >
+                                Print result slip
+                            </button>
                         </div>
                     ))}
                 </div>
+            )}
+
+
+            {slip && (
+                <ResultSlip result={slip} onClose={() => setSlip(null)} />
             )}
 
         </div>

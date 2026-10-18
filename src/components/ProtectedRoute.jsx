@@ -14,3 +14,17 @@ export function ProtectedRoute() {
 
     return <Outlet />;
 }
+
+
+// Wrap /login and /register in this: students who are already
+// logged in are sent straight to the dashboard instead.
+export function PublicOnlyRoute() {
+
+    const { isAuthenticated } = useAuth();
+
+    if (isAuthenticated) {
+        return <Navigate to="/dashboard" replace />;
+    }
+
+    return <Outlet />;
+}

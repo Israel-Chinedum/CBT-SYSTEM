@@ -1,12 +1,14 @@
 import { Button } from "/src/components/Button";
 import { Colors } from "/src/components/Color";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useState } from "react";
+import { useSlowNotice } from "/src/utils/useSlowNotice";
 import { useAuth } from "/src/context/AuthContext";
 
 export function Login() {
 
     const navigate = useNavigate();
+    const location = useLocation();
     const { login } = useAuth();
 
 
@@ -39,6 +41,7 @@ export function Login() {
     // ==========================================
 
     const [loading, setLoading] = useState(false);
+    const slow = useSlowNotice(loading);
 
 
     // ==========================================
@@ -215,7 +218,7 @@ export function Login() {
             }
 
 
-            console.log("Login server response:", data);
+            if (import.meta.env.DEV) console.log("Login server response:", data);
 
 
             // ==================================
@@ -234,9 +237,20 @@ export function Login() {
                 // REDIRECT AFTER SUCCESSFUL LOGIN
                 // ==================================
 
-                login(data.user, data.token);
+                // The server returns flat fields: fullname, username, email, phone, token
+                const payload = data.user ?? data.data ?? data;
 
-                navigate("/dashboard", { replace: true });
+                const loggedInUser = {
+                    fullname: payload.fullname,
+                    username: payload.username,
+                    email: payload.email,
+                    phone: payload.phone
+                };
+
+                login(loggedInUser, payload.token ?? data.token);
+
+                // Go back to the page they were trying to open, or the dashboard
+                navigate(location.state?.from?.pathname || "/dashboard", { replace: true });
 
             }
 
@@ -478,6 +492,12 @@ export function Login() {
                         />
 
                     </div>
+
+                    {loading && slow && (
+                        <p className="mt-4 text-center text-sm text-gray-600">
+                            The server is waking up. This can take up to a minute, please wait...
+                        </p>
+                    )}
 
                 </form>
 
