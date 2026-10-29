@@ -15,12 +15,13 @@ import {
 import { Colors } from "./components/Color";
 import { useAuth } from "./context/AuthContext";
 import { getSubjects } from "./services/api";
+import fpogLogo from "/src/assets/fpog_logo.png";
 
 const NAV_LINKS = [
   { label: "Subjects", href: "#subjects" },
   { label: "Features", href: "#features" },
   { label: "How it works", href: "#how-it-works" },
-  { label: "Contact", href: "#contact" },
+  // { label: "Contact", href: "#contact" },
 ];
 
 const SUBJECT_ICONS = {
@@ -68,7 +69,11 @@ function CtaButton({ children, onClick, variant = "brand", className = "" }) {
       border: "1px solid rgba(255,255,255,0.45)",
     },
     brand: { background: Colors.gradient, color: Colors.light },
-    outline: { background: "transparent", color: Colors.dark, border: `1px solid ${Colors.primary}` },
+    outline: {
+      background: "transparent",
+      color: Colors.dark,
+      border: `1px solid ${Colors.primary}`,
+    },
   };
 
   return (
@@ -88,11 +93,16 @@ function FeatureCard({ title, desc, className = "", children }) {
     <div
       className={`rounded-3xl border border-slate-200 bg-white p-6 flex flex-col ${className}`}
     >
-      <div className="flex-1 flex items-center justify-center rounded-2xl p-4 mb-5 min-h-[130px]" style={{ background: `${Colors.light}22` }}>
+      <div
+        className="flex-1 flex items-center justify-center rounded-2xl p-4 mb-5 min-h-[130px]"
+        style={{ background: `${Colors.light}22` }}
+      >
         {children}
       </div>
       <p className="text-[15px] font-semibold text-slate-800">{title}</p>
-      <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">{desc}</p>
+      <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+        {desc}
+      </p>
     </div>
   );
 }
@@ -176,6 +186,7 @@ export function Home() {
   return (
     <div className="min-h-screen w-full bg-white text-slate-800">
       {/* ================= NAVBAR ================= */}
+
       <header
         className={`fixed top-0 inset-x-0 z-30 transition-colors duration-200 ${
           onDark
@@ -241,14 +252,23 @@ export function Home() {
 
       {/* ================= HERO ================= */}
       <section
-        className="relative overflow-hidden rounded-b-[2.5rem] pt-28 sm:pt-32 pb-28 sm:pb-32"
-        style={heroBackground}
+        className="relative overflow-hidden rounded-b-[2.5rem] pt-28 sm:pt-32 pb-28 sm:pb-32 bg-gray-800"
+        // style={heroBackground}
       >
+        <div className="bg-white absolute left-[50%] translate-x-[-50%] top-[8%] rounded-full p-3">
+          <img
+            src={fpogLogo}
+            alt=""
+            aria-hidden="true"
+            className=" inset-0 w-50  h-50 bg-cover z-0 pointer-events-none select-none"
+          />
+        </div>
         {/* dot pattern */}
         <div
           className="absolute inset-0 opacity-60 pointer-events-none"
           style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px)",
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.14) 1px, transparent 1px)",
             backgroundSize: "24px 24px",
           }}
           aria-hidden="true"
@@ -258,7 +278,10 @@ export function Home() {
           {/* Copy */}
           <div>
             <span className="inline-flex items-center gap-2 text-[12px] font-medium px-3 py-1 rounded-full bg-white/10 text-white/90 border border-white/15">
-              <span className="w-1.5 h-1.5 rounded-full" style={{ background: Colors.light }} />
+              <span
+                className="w-1.5 h-1.5 rounded-full"
+                style={{ background: Colors.light }}
+              />
               Built for schools and exam bodies
             </span>
 
@@ -278,7 +301,11 @@ export function Home() {
             </div>
 
             <ul className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[12.5px] text-white/70">
-              {["Auto-submit when time ends", "Answers saved automatically", "Printable result slip"].map((t) => (
+              {[
+                "Auto-submit when time ends",
+                "Answers saved automatically",
+                "Printable result slip",
+              ].map((t) => (
                 <li key={t} className="flex items-center gap-1.5">
                   <CheckCircle2 size={14} style={{ color: Colors.light }} />
                   {t}
@@ -290,7 +317,10 @@ export function Home() {
           {/* App preview */}
           <div className="relative w-full max-w-md mx-auto lg:mx-0 lg:ml-auto">
             {/* floating timer */}
-            <div className="hidden lg:flex absolute -top-5 -right-4 z-10 items-center gap-2 px-3.5 py-2 rounded-full bg-white shadow-lg text-[13px] font-semibold" style={{ color: Colors.dark }}>
+            <div
+              className="hidden lg:flex absolute -top-5 -right-4 z-10 items-center gap-2 px-3.5 py-2 rounded-full bg-white shadow-lg text-[13px] font-semibold"
+              style={{ color: Colors.dark }}
+            >
               <Clock size={15} />
               12:34 left
             </div>
@@ -301,7 +331,13 @@ export function Home() {
                 <span className="text-[11.5px] font-medium text-slate-400">
                   Mathematics · Question 7 of 10
                 </span>
-                <span className="text-[11px] font-semibold px-2.5 py-1 rounded-full" style={{ background: `${Colors.light}33`, color: Colors.dark }}>
+                <span
+                  className="text-[11px] font-semibold px-2.5 py-1 rounded-full"
+                  style={{
+                    background: `${Colors.light}33`,
+                    color: Colors.dark,
+                  }}
+                >
                   Algebra
                 </span>
               </div>
@@ -323,11 +359,23 @@ export function Home() {
                     className={`flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-[13.5px] ${
                       opt.selected ? "" : "border-slate-200 text-slate-600"
                     }`}
-                    style={opt.selected ? { borderColor: Colors.dark, background: Colors.background, color: Colors.dark } : undefined}
+                    style={
+                      opt.selected
+                        ? {
+                            borderColor: Colors.dark,
+                            background: Colors.background,
+                            color: Colors.dark,
+                          }
+                        : undefined
+                    }
                   >
                     <span
                       className="w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
-                      style={opt.selected ? { background: Colors.dark, color: "#fff" } : { background: "#f1f5f9", color: "#475569" }}
+                      style={
+                        opt.selected
+                          ? { background: Colors.dark, color: "#fff" }
+                          : { background: "#f1f5f9", color: "#475569" }
+                      }
                     >
                       {opt.label}
                     </span>
@@ -343,7 +391,9 @@ export function Home() {
                 <CheckCircle2 size={20} />
               </div>
               <div>
-                <p className="text-[13px] font-semibold text-slate-800">Physics · Passed</p>
+                <p className="text-[13px] font-semibold text-slate-800">
+                  Physics · Passed
+                </p>
                 <p className="text-[12px] text-slate-500">8 / 10 · 80%</p>
               </div>
             </div>
@@ -359,7 +409,10 @@ export function Home() {
               key={s.label}
               className={`px-5 py-5 text-center ${i >= 2 ? "border-t lg:border-t-0 border-slate-100" : ""}`}
             >
-              <p className="text-[22px] sm:text-[26px] font-semibold" style={{ color: Colors.dark }}>
+              <p
+                className="text-[22px] sm:text-[26px] font-semibold"
+                style={{ color: Colors.dark }}
+              >
                 {s.value}
               </p>
               <p className="text-[12px] text-slate-500 mt-0.5">{s.label}</p>
@@ -369,8 +422,14 @@ export function Home() {
       </section>
 
       {/* ================= SUBJECTS ================= */}
-      <section id="subjects" className="scroll-mt-20 max-w-6xl mx-auto px-5 sm:px-8 pt-20 sm:pt-24">
-        <p className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: Colors.primary }}>
+      <section
+        id="subjects"
+        className="scroll-mt-20 max-w-6xl mx-auto px-5 sm:px-8 pt-20 sm:pt-24"
+      >
+        <p
+          className="text-[12px] font-semibold uppercase tracking-wider"
+          style={{ color: Colors.primary }}
+        >
           Subjects
         </p>
         <h2 className="mt-2 text-[26px] sm:text-[32px] font-semibold text-slate-900 tracking-tight">
@@ -413,8 +472,14 @@ export function Home() {
       </section>
 
       {/* ================= FEATURES ================= */}
-      <section id="features" className="scroll-mt-20 max-w-6xl mx-auto px-5 sm:px-8 pt-20 sm:pt-24">
-        <p className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: Colors.primary }}>
+      <section
+        id="features"
+        className="scroll-mt-20 max-w-6xl mx-auto px-5 sm:px-8 pt-20 sm:pt-24"
+      >
+        <p
+          className="text-[12px] font-semibold uppercase tracking-wider"
+          style={{ color: Colors.primary }}
+        >
           Features
         </p>
         <h2 className="mt-2 text-[26px] sm:text-[32px] font-semibold text-slate-900 tracking-tight">
@@ -429,12 +494,20 @@ export function Home() {
             desc="A live countdown turns red when time is short, and the exam is submitted automatically at zero. Answers are saved as you go."
           >
             <div className="w-full max-w-xs">
-              <div className="flex items-center justify-between text-[13px] font-semibold" style={{ color: Colors.dark }}>
-                <span className="flex items-center gap-1.5"><Clock size={15} /> Time left</span>
+              <div
+                className="flex items-center justify-between text-[13px] font-semibold"
+                style={{ color: Colors.dark }}
+              >
+                <span className="flex items-center gap-1.5">
+                  <Clock size={15} /> Time left
+                </span>
                 <span className="font-mono">04:12</span>
               </div>
               <div className="mt-2 h-2 rounded-full bg-white overflow-hidden">
-                <div className="h-full rounded-full bg-red-400" style={{ width: "21%" }} />
+                <div
+                  className="h-full rounded-full bg-red-400"
+                  style={{ width: "21%" }}
+                />
               </div>
             </div>
           </FeatureCard>
@@ -445,21 +518,28 @@ export function Home() {
             desc="Jump to any question and flag the ones you want to revisit before submitting."
           >
             <div className="grid grid-cols-5 gap-1.5">
-              {["a", "a", "f", "a", "c", "e", "e", "a", "e", "e"].map((state, i) => (
-                <span
-                  key={i}
-                  className={`w-7 h-7 rounded-md text-[11px] font-semibold flex items-center justify-center ${
-                    state === "e" ? "bg-white border border-slate-300 text-slate-500" : "text-white"
-                  } ${state === "f" ? "bg-amber-400" : ""} ${state === "c" ? "ring-2 ring-offset-1" : ""}`}
-                  style={
-                    state === "a" || state === "c"
-                      ? { background: Colors.dark, "--tw-ring-color": Colors.dark }
-                      : undefined
-                  }
-                >
-                  {i + 1}
-                </span>
-              ))}
+              {["a", "a", "f", "a", "c", "e", "e", "a", "e", "e"].map(
+                (state, i) => (
+                  <span
+                    key={i}
+                    className={`w-7 h-7 rounded-md text-[11px] font-semibold flex items-center justify-center ${
+                      state === "e"
+                        ? "bg-white border border-slate-300 text-slate-500"
+                        : "text-white"
+                    } ${state === "f" ? "bg-amber-400" : ""} ${state === "c" ? "ring-2 ring-offset-1" : ""}`}
+                    style={
+                      state === "a" || state === "c"
+                        ? {
+                            background: Colors.dark,
+                            "--tw-ring-color": Colors.dark,
+                          }
+                        : undefined
+                    }
+                  >
+                    {i + 1}
+                  </span>
+                ),
+              )}
             </div>
           </FeatureCard>
 
@@ -468,8 +548,13 @@ export function Home() {
             title="Built-in calculator"
             desc="Mathematics candidates get a calculator right inside the exam screen."
           >
-            <div className="w-36 rounded-xl p-2 shadow" style={{ background: Colors.darker }}>
-              <p className="text-right text-white font-mono text-lg px-1 pb-1.5">36</p>
+            <div
+              className="w-36 rounded-xl p-2 shadow"
+              style={{ background: Colors.darker }}
+            >
+              <p className="text-right text-white font-mono text-lg px-1 pb-1.5">
+                36
+              </p>
               <div className="grid grid-cols-4 gap-1">
                 {["7", "8", "9", "×", "4", "5", "6", "−"].map((k) => (
                   <span
@@ -494,7 +579,10 @@ export function Home() {
             desc="Leaving the exam screen shows a warning and is recorded, so everyone sits under the same rules."
           >
             <div className="flex items-start gap-2.5 rounded-xl bg-white border border-amber-200 px-3.5 py-3 max-w-[230px]">
-              <ShieldAlert size={18} className="text-amber-500 shrink-0 mt-0.5" />
+              <ShieldAlert
+                size={18}
+                className="text-amber-500 shrink-0 mt-0.5"
+              />
               <p className="text-[12px] text-slate-600 leading-snug">
                 You left the exam screen <strong>1 time</strong> so far.
               </p>
@@ -508,10 +596,16 @@ export function Home() {
           >
             <div className="flex items-end gap-2 h-24">
               {[40, 65, 30, 80, 60].map((h, i) => (
-                <div key={i} className="w-6 flex flex-col justify-end items-center h-full">
+                <div
+                  key={i}
+                  className="w-6 flex flex-col justify-end items-center h-full"
+                >
                   <div
                     className="w-full rounded-t-md"
-                    style={{ height: `${h}%`, background: h >= 50 ? Colors.primary : "#f87171" }}
+                    style={{
+                      height: `${h}%`,
+                      background: h >= 50 ? Colors.primary : "#f87171",
+                    }}
                   />
                 </div>
               ))}
@@ -521,8 +615,14 @@ export function Home() {
       </section>
 
       {/* ================= HOW IT WORKS ================= */}
-      <section id="how-it-works" className="scroll-mt-20 max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-24">
-        <p className="text-[12px] font-semibold uppercase tracking-wider" style={{ color: Colors.primary }}>
+      <section
+        id="how-it-works"
+        className="scroll-mt-20 max-w-6xl mx-auto px-5 sm:px-8 py-20 sm:py-24"
+      >
+        <p
+          className="text-[12px] font-semibold uppercase tracking-wider"
+          style={{ color: Colors.primary }}
+        >
           How it works
         </p>
         <h2 className="mt-2 text-[26px] sm:text-[32px] font-semibold text-slate-900 tracking-tight">
@@ -545,7 +645,9 @@ export function Home() {
               >
                 {s.n}
               </div>
-              <p className="mt-4 text-[15px] font-semibold text-slate-800">{s.title}</p>
+              <p className="mt-4 text-[15px] font-semibold text-slate-800">
+                {s.title}
+              </p>
               <p className="mt-1.5 text-[13.5px] text-slate-500 leading-relaxed max-w-xs">
                 {s.desc}
               </p>
@@ -579,7 +681,10 @@ export function Home() {
       {/* ================= FOOTER ================= */}
       <footer id="contact" className="border-t border-slate-100">
         <div className="max-w-6xl mx-auto px-5 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <span className="text-[13px] font-medium" style={{ color: Colors.primary }}>
+          <span
+            className="text-[13px] font-medium"
+            style={{ color: Colors.primary }}
+          >
             CBT-SYSTEM
           </span>
           <p className="text-[12.5px] text-slate-400">

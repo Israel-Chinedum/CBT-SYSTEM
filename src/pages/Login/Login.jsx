@@ -4,505 +4,379 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useState } from "react";
 import { useSlowNotice } from "/src/utils/useSlowNotice";
 import { useAuth } from "/src/context/AuthContext";
+import fpogLogo from "/src/assets/fpog_logo.png";
 
 export function Login() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth();
 
-    const navigate = useNavigate();
-    const location = useLocation();
-    const { login } = useAuth();
+  // ==========================================
+  // FORM DATA
+  // ==========================================
 
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
 
-    // ==========================================
-    // FORM DATA
-    // ==========================================
+  // ==========================================
+  // FIELD ERRORS
+  // ==========================================
 
-    const [formData, setFormData] = useState({
-        email: "",
-        password: ""
-    });
+  const [errors, setErrors] = useState({});
 
+  // ==========================================
+  // SERVER MESSAGE
+  // ==========================================
 
-    // ==========================================
-    // FIELD ERRORS
-    // ==========================================
+  const [message, setMessage] = useState("");
 
-    const [errors, setErrors] = useState({});
+  // ==========================================
+  // LOADING STATE
+  // ==========================================
 
+  const [loading, setLoading] = useState(false);
+  const slow = useSlowNotice(loading);
 
-    // ==========================================
-    // SERVER MESSAGE
-    // ==========================================
+  // ==========================================
+  // HANDLE INPUT CHANGE
+  // ==========================================
 
-    const [message, setMessage] = useState("");
+  const handleChange = (e) => {
+    const { id, value } = e.target;
 
+    setFormData((previousData) => ({
+      ...previousData,
+      [id]: value,
+    }));
 
-    // ==========================================
-    // LOADING STATE
-    // ==========================================
+    // Remove the error for the field
+    // once the user starts correcting it
 
-    const [loading, setLoading] = useState(false);
-    const slow = useSlowNotice(loading);
+    setErrors((previousErrors) => ({
+      ...previousErrors,
+      [id]: "",
+    }));
 
+    // Remove general server message
 
-    // ==========================================
-    // HANDLE INPUT CHANGE
-    // ==========================================
+    setMessage("");
+  };
 
-    const handleChange = (e) => {
+  // ==========================================
+  // VALIDATE FORM
+  // ==========================================
 
-        const { id, value } = e.target;
+  const validateForm = () => {
+    const newErrors = {};
 
+    // ======================================
+    // EMAIL VALIDATION
+    // ======================================
 
-        setFormData((previousData) => ({
-            ...previousData,
-            [id]: value
-        }));
+    const email = formData.email.trim();
 
+    if (!email) {
+      newErrors.email = "Email is required.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = "Please enter a valid email address.";
+    }
 
-        // Remove the error for the field
-        // once the user starts correcting it
+    // ======================================
+    // PASSWORD VALIDATION
+    // ======================================
 
-        setErrors((previousErrors) => ({
-            ...previousErrors,
-            [id]: ""
-        }));
+    const password = formData.password;
 
+    if (!password) {
+      newErrors.password = "Password is required.";
+    } else if (password.length < 8) {
+      newErrors.password = "Password must be at least 8 characters.";
+    }
 
-        // Remove general server message
+    // ======================================
+    // SAVE ERRORS
+    // ======================================
 
-        setMessage("");
-    };
+    setErrors(newErrors);
 
+    // ======================================
+    // RETURN VALIDATION RESULT
+    // ======================================
 
-    // ==========================================
-    // VALIDATE FORM
-    // ==========================================
+    return Object.keys(newErrors).length === 0;
+  };
 
-    const validateForm = () => {
+  // ==========================================
+  // SUBMIT FORM
+  // ==========================================
 
-        const newErrors = {};
+  const handleSubmit = async (e) => {
+    // Prevent normal form submission
 
+    e.preventDefault();
 
-        // ======================================
-        // EMAIL VALIDATION
-        // ======================================
+    // Clear previous message
 
-        const email = formData.email.trim();
+    setMessage("");
 
-        if (!email) {
+    // ======================================
+    // RUN FRONTEND VALIDATION
+    // ======================================
 
-            newErrors.email =
-                "Email is required.";
+    const isValid = validateForm();
 
-        } else if (
-            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
-        ) {
+    // Stop if validation failed
 
-            newErrors.email =
-                "Please enter a valid email address.";
+    if (!isValid) {
+      return;
+    }
 
-        }
+    // ======================================
+    // START LOADING
+    // ======================================
 
+    setLoading(true);
 
-        // ======================================
-        // PASSWORD VALIDATION
-        // ======================================
+    try {
+      // ==================================
+      // SEND LOGIN REQUEST TO BACKEND
+      // ==================================
 
-        const password = formData.password;
+      const response = await fetch(
+        "https://cbt-system-server.onrender.com/auth/signin",
+        {
+          method: "POST",
 
-        if (!password) {
-
-            newErrors.password =
-                "Password is required.";
-
-        } else if (password.length < 8) {
-
-            newErrors.password =
-                "Password must be at least 8 characters.";
-
-        }
-
-
-        // ======================================
-        // SAVE ERRORS
-        // ======================================
-
-        setErrors(newErrors);
-
-
-        // ======================================
-        // RETURN VALIDATION RESULT
-        // ======================================
-
-        return Object.keys(newErrors).length === 0;
-    };
-
-
-    // ==========================================
-    // SUBMIT FORM
-    // ==========================================
-
-    const handleSubmit = async (e) => {
-
-        // Prevent normal form submission
-
-        e.preventDefault();
-
-
-        // Clear previous message
-
-        setMessage("");
-
-
-        // ======================================
-        // RUN FRONTEND VALIDATION
-        // ======================================
-
-        const isValid = validateForm();
-
-
-        // Stop if validation failed
-
-        if (!isValid) {
-            return;
-        }
-
-
-        // ======================================
-        // START LOADING
-        // ======================================
-
-        setLoading(true);
-
-
-        try {
-
-            // ==================================
-            // SEND LOGIN REQUEST TO BACKEND
-            // ==================================
-
-            const response = await fetch(
-                "https://cbt-system-server.onrender.com/auth/signin",
-                {
-                    method: "POST",
-
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-
-                    body: JSON.stringify({
-
-                        email: formData.email.trim(),
-
-                        password: formData.password
-
-                    })
-                }
-            );
-
-
-            // ==================================
-            // GET SERVER RESPONSE
-            // ==================================
-
-            let data = {};
-
-            try {
-
-                data = await response.json();
-
-            } catch {
-
-                data = {};
-
-            }
-
-
-            if (import.meta.env.DEV) console.log("Login server response:", data);
-
-
-            // ==================================
-            // LOGIN SUCCESSFUL
-            // ==================================
-
-            if (response.ok) {
-
-                setMessage(
-                    data.message ||
-                    "Login successful!"
-                );
-
-
-                // ==================================
-                // REDIRECT AFTER SUCCESSFUL LOGIN
-                // ==================================
-
-                // The server returns flat fields: fullname, username, email, phone, token
-                const payload = data.user ?? data.data ?? data;
-
-                const loggedInUser = {
-                    fullname: payload.fullname,
-                    username: payload.username,
-                    email: payload.email,
-                    phone: payload.phone
-                };
-
-                login(loggedInUser, payload.token ?? data.token);
-
-                // Go back to the page they were trying to open, or the dashboard
-                navigate(location.state?.from?.pathname || "/dashboard", { replace: true });
-
-            }
-
-
-            // ==================================
-            // LOGIN FAILED
-            // ==================================
-
-            else {
-
-                setMessage(
-                    data.message ||
-                    "Invalid email or password."
-                );
-
-            }
-
-
-        } catch (error) {
-
-            // ==================================
-            // CONNECTION ERROR
-            // ==================================
-
-            console.error(
-                "Login error:",
-                error
-            );
-
-
-            setMessage(
-                "Unable to connect to the server. Please try again."
-            );
-
-
-        } finally {
-
-            // ==================================
-            // STOP LOADING
-            // ==================================
-
-            setLoading(false);
-
-        }
-    };
-
-
-    // ==========================================
-    // PAGE
-    // ==========================================
-
-    return (
-
-        <div
-            className="w-full min-h-screen flex justify-center items-center px-4 py-10"
-            style={{ background: Colors.background }}
+          headers: {
+            "Content-Type": "application/json",
+          },
+
+          body: JSON.stringify({
+            email: formData.email.trim(),
+
+            password: formData.password,
+          }),
+        },
+      );
+
+      // ==================================
+      // GET SERVER RESPONSE
+      // ==================================
+
+      let data = {};
+
+      try {
+        data = await response.json();
+      } catch {
+        data = {};
+      }
+
+      if (import.meta.env.DEV) console.log("Login server response:", data);
+
+      // ==================================
+      // LOGIN SUCCESSFUL
+      // ==================================
+
+      if (response.ok) {
+        setMessage(data.message || "Login successful!");
+
+        // ==================================
+        // REDIRECT AFTER SUCCESSFUL LOGIN
+        // ==================================
+
+        // The server returns flat fields: fullname, username, email, phone, token
+        const payload = data.user ?? data.data ?? data;
+
+        const loggedInUser = {
+          fullname: payload.fullname,
+          username: payload.username,
+          email: payload.email,
+          phone: payload.phone,
+        };
+
+        login(loggedInUser, payload.token ?? data.token);
+
+        // Go back to the page they were trying to open, or the dashboard
+        navigate(location.state?.from?.pathname || "/dashboard", {
+          replace: true,
+        });
+      }
+
+      // ==================================
+      // LOGIN FAILED
+      // ==================================
+      else {
+        setMessage(data.message || "Invalid email or password.");
+      }
+    } catch (error) {
+      // ==================================
+      // CONNECTION ERROR
+      // ==================================
+
+      console.error("Login error:", error);
+
+      setMessage("Unable to connect to the server. Please try again.");
+    } finally {
+      // ==================================
+      // STOP LOADING
+      // ==================================
+
+      setLoading(false);
+    }
+  };
+
+  // ==========================================
+  // PAGE
+  // ==========================================
+
+  return (
+    <div
+      className="w-full min-h-screen flex justify-center items-center px-4 py-10"
+      style={{ background: Colors.background }}
+    >
+      <div className=" isolate w-full max-w-xl flex justify-center items-center">
+        {/* BACKGROUND IMAGE */}
+
+        <img
+          src={fpogLogo}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-[50%] left-[50%] translate-x-[-50%] h-full bg-cover z-0 pointer-events-none select-none"
+        />
+
+        {/* FORM */}
+
+        <form
+          onSubmit={handleSubmit}
+          noValidate
+          className="relative z-10 w-[88%] sm:w-[80%] bg-gray-100 my-8 sm:my-12 p-5 sm:p-8 rounded shadow-lg"
         >
+          {/* TITLE */}
 
-            <div
-                className="relative isolate w-full max-w-xl flex justify-center items-center"
-            >
+          <h3 className="text-2xl sm:text-4xl text-center font-bold mb-5 sm:mb-7">
+            Login
+          </h3>
 
-                {/* BACKGROUND IMAGE */}
-
-                <img
-                    src="/src/assets/ree.png"
-                    alt=""
-                    aria-hidden="true"
-                    className="absolute inset-0 w-full h-full object-fill z-0 pointer-events-none select-none"
-                />
-
-
-                {/* FORM */}
-
-                <form
-                    onSubmit={handleSubmit}
-                    noValidate
-                    className="relative z-10 w-[88%] sm:w-[80%] bg-gray-100 my-8 sm:my-12 p-5 sm:p-8 rounded shadow-lg"
-                >
-
-                    {/* TITLE */}
-
-                    <h3 className="text-2xl sm:text-4xl text-center font-bold mb-5 sm:mb-7">
-                        Login
-                    </h3>
-
-
-                    {/* =====================================
+          {/* =====================================
                         SERVER MESSAGE
                     ====================================== */}
 
-                    {message && (
+          {message && (
+            <div
+              className={`mb-5 p-3 rounded text-center ${
+                message.toLowerCase().includes("successful")
+                  ? "bg-green-100 text-green-700"
+                  : "bg-red-100 text-red-700"
+              }`}
+            >
+              {message}
+            </div>
+          )}
 
-                        <div
-                            className={`mb-5 p-3 rounded text-center ${
-                                message.toLowerCase().includes("successful")
-                                    ? "bg-green-100 text-green-700"
-                                    : "bg-red-100 text-red-700"
-                            }`}
-                        >
-                            {message}
-                        </div>
-
-                    )}
-
-
-                    {/* =====================================
+          {/* =====================================
                         EMAIL
                     ====================================== */}
 
-                    <div className="form-group mb-4">
+          <div className="form-group mb-4">
+            <label htmlFor="email" className="block mb-2 font-bold">
+              Email
+            </label>
 
-                        <label
-                            htmlFor="email"
-                            className="block mb-2 font-bold"
-                        >
-                            Email
-                        </label>
+            <input
+              type="email"
+              placeholder="Enter email"
+              id="email"
+              value={formData.email}
+              onChange={handleChange}
+              className={`border block w-full rounded h-11 sm:h-12 px-3 ${
+                errors.email ? "border-red-500" : "border-gray-300"
+              }`}
+            />
 
+            {/* EMAIL ERROR */}
 
-                        <input
-                            type="email"
-                            placeholder="Enter email"
-                            id="email"
-                            value={formData.email}
-                            onChange={handleChange}
-                            className={`border block w-full rounded h-11 sm:h-12 px-3 ${
-                                errors.email
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                            }`}
-                        />
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
+          </div>
 
-
-                        {/* EMAIL ERROR */}
-
-                        {errors.email && (
-
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.email}
-                            </p>
-
-                        )}
-
-                    </div>
-
-
-                    {/* =====================================
+          {/* =====================================
                         PASSWORD
                     ====================================== */}
 
-                    <div className="form-group mb-4">
+          <div className="form-group mb-4">
+            <label htmlFor="password" className="block mb-2 font-bold">
+              Password
+            </label>
 
-                        <label
-                            htmlFor="password"
-                            className="block mb-2 font-bold"
-                        >
-                            Password
-                        </label>
+            <input
+              type="password"
+              placeholder="Enter password"
+              id="password"
+              value={formData.password}
+              onChange={handleChange}
+              className={`border block w-full rounded h-11 sm:h-12 px-3 ${
+                errors.password ? "border-red-500" : "border-gray-300"
+              }`}
+            />
 
+            {/* PASSWORD ERROR */}
 
-                        <input
-                            type="password"
-                            placeholder="Enter password"
-                            id="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            className={`border block w-full rounded h-11 sm:h-12 px-3 ${
-                                errors.password
-                                    ? "border-red-500"
-                                    : "border-gray-300"
-                            }`}
-                        />
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
+          </div>
 
-
-                        {/* PASSWORD ERROR */}
-
-                        {errors.password && (
-
-                            <p className="text-red-500 text-sm mt-1">
-                                {errors.password}
-                            </p>
-
-                        )}
-
-                    </div>
-
-
-                    {/* ==========================================
+          {/* ==========================================
                         REGISTER / HOME LINKS
                     =========================================== */}
 
-                    <div className="form-group mb-5">
+          <div className="form-group mb-5">
+            <p>
+              Don't have an account?{" "}
+              <Link
+                to="/register"
+                className="font-medium"
+                style={{
+                  color: Colors.primary,
+                }}
+              >
+                Register
+              </Link>
+              {" / "}
+              <Link
+                to="/"
+                className="font-medium"
+                style={{
+                  color: Colors.primary,
+                }}
+              >
+                Home
+              </Link>
+            </p>
+          </div>
 
-                        <p>
-
-                            Don't have an account?{" "}
-
-                            <Link
-                                to="/register"
-                                className="font-medium"
-                                style={{
-                                    color: Colors.primary
-                                }}
-                            >
-                                Register
-                            </Link>
-
-                            {" / "}
-
-                            <Link
-                                to="/"
-                                className="font-medium"
-                                style={{
-                                    color: Colors.primary
-                                }}
-                            >
-                                Home
-                            </Link>
-
-                        </p>
-
-                    </div>
-
-
-                    {/* ==========================================
+          {/* ==========================================
                         LOGIN BUTTON
                     =========================================== */}
 
-                    <div className="form-group flex justify-center">
+          <div className="form-group flex justify-center">
+            <Button
+              name={loading ? "Logging in..." : "Login"}
+              disabled={loading}
+            />
+          </div>
 
-                        <Button
-                            name={
-                                loading
-                                    ? "Logging in..."
-                                    : "Login"
-                            }
-                            disabled={loading}
-                        />
-
-                    </div>
-
-                    {loading && slow && (
-                        <p className="mt-4 text-center text-sm text-gray-600">
-                            The server is waking up. This can take up to a minute, please wait...
-                        </p>
-                    )}
-
-                </form>
-
-            </div>
-
-        </div>
-    );
+          {loading && slow && (
+            <p className="mt-4 text-center text-sm text-gray-600">
+              The server is waking up. This can take up to a minute, please
+              wait...
+            </p>
+          )}
+        </form>
+      </div>
+    </div>
+  );
 }
